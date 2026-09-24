@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Predicción de Ventas SRI</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(
+                135deg,
+                #eef7f7,
+                #f5f7fa
+            );
+            color: #263238;
+        }
+
+        .contenedor {
+            width: 95%;
+            max-width: 900px;
+            margin: 35px auto;
+        }
+
+        .encabezado {
+            background: linear-gradient(
+                90deg,
+                #0f766e,
+                #075985
+            );
+
+            color: white;
+
+            padding: 22px 25px;
+
+            border-radius: 14px;
+
+            text-align: center;
+
+            box-shadow:
+                0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .encabezado h1 {
+            margin: 0;
+            font-size: 25px;
+        }
+
+        .encabezado p {
+            margin: 8px 0 0;
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .tarjeta {
+            background: white;
+
+            margin-top: 25px;
+
+            padding: 30px;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 8px 25px rgba(0,0,0,0.08);
+        }
+
+        .titulo-seccion {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0f766e;
+            margin-bottom: 8px;
+        }
+
+        .descripcion {
+            color: #607d8b;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 20px;
+        }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .campo-completo {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 7px;
+            color: #37474f;
+            font-size: 14px;
+        }
+
+        input,
+        select {
+            width: 100%;
+
+            padding: 12px;
+
+            border: 1px solid #cfd8dc;
+
+            border-radius: 8px;
+
+            font-size: 15px;
+
+            background: white;
+
+            transition: 0.2s;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+
+            border-color: #0f766e;
+
+            box-shadow:
+                0 0 0 3px rgba(15,118,110,0.10);
+        }
+
+        select:disabled {
+            background: #eceff1;
+            color: #78909c;
+            cursor: not-allowed;
+        }
+
+        .ayuda {
+            font-size: 12px;
+            color: #78909c;
+            margin-top: 5px;
+        }
+
+        .boton {
+            width: 100%;
+
+            margin-top: 25px;
+
+            padding: 15px;
+
+            border: none;
+
+            border-radius: 10px;
+
+            background: linear-gradient(
+                90deg,
+                #0f766e,
+                #075985
+            );
+
+            color: white;
+
+            font-size: 17px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .boton:hover {
+            transform: translateY(-1px);
+
+            box-shadow:
+                0 7px 18px rgba(7,89,133,0.25);
+        }
+
+        .boton:disabled {
+            background: #90a4ae;
+            cursor: wait;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .resultado {
+            display: none;
+
+            margin-top: 25px;
+
+            padding: 25px;
+
+            border-radius: 12px;
+
+            text-align: center;
+        }
+
+        .resultado-exito {
+            background: #e8f5e9;
+
+            border: 1px solid #81c784;
+
+            color: #1b5e20;
+        }
+
+        .resultado-error {
+            background: #ffebee;
+
+            border: 1px solid #ef9a9a;
+
+            color: #b71c1c;
+
+            text-align: left;
+
+            white-space: normal;
+
+            word-break: break-word;
+        }
+
+        .resultado h2 {
+            margin-top: 0;
+        }
+
+        .valor-prediccion {
+            font-size: 38px;
+
+            font-weight: bold;
+
+            margin: 15px 0;
+
+            color: #0f766e;
+        }
+
+        .detalle {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 10px;
+
+            margin-top: 20px;
+
+            text-align: left;
+        }
+
+        .detalle-item {
+            background: rgba(255,255,255,0.75);
+
+            padding: 12px;
+
+            border-radius: 8px;
+
+            border: 1px solid #dcedc8;
+        }
+
+        .detalle-item strong {
+            display: block;
+
+            color: #455a64;
+
+            font-size: 12px;
+
+            margin-bottom: 4px;
+        }
+
+        .pie {
+            text-align: center;
+
+            margin-top: 20px;
+
+            color: #78909c;
+
+            font-size: 12px;
+        }
+
+        .cargando {
+            display: inline-block;
+
+            width: 16px;
+            height: 16px;
+
+            border: 3px solid rgba(255,255,255,0.4);
+
+            border-top-color: white;
+
+            border-radius: 50%;
+
+            animation:
+                girar 0.8s linear infinite;
+
+            vertical-align: middle;
+
+            margin-right: 8px;
+        }
+
+        @keyframes girar {
+
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+
+        }
+
+        @media (max-width: 700px) {
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .campo-completo {
+                grid-column: auto;
+            }
+
+            .detalle {
+                grid-template-columns: 1fr;
+            }
+
+            .tarjeta {
+                padding: 20px;
+            }
+
+            .encabezado h1 {
+                font-size: 20px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="contenedor">
+
+
+    <!-- =====================================================
+         ENCABEZADO
+         ===================================================== -->
+
+    <div class="encabezado">
+
+        <h1>
+            🔮 PREDICCIÓN DE VENTAS DEL SIGUIENTE PERÍODO
+        </h1>
+
+        <p>
+            Sistema de Minería de Datos aplicado a información
+            de ventas del SRI · Modelo original
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         FORMULARIO
+         ===================================================== -->
+
+    <div class="tarjeta">
+
+        <div class="titulo-seccion">
+            📊 Datos para la predicción
+        </div>
+
+        <div class="descripcion">
+
+            Ingrese los datos del período actual utilizados por el
+            modelo original del SRI. El sistema calculará automáticamente
+            el año, el período siguiente y la variación de ventas.
+
+        </div>
+
+
+        <form id="formularioPrediccion">
+
+    <div class="grid">
+
+        <!-- MES -->
+        <div class="campo">
+            <label for="MES">📅 Mes actual</label>
+            <select id="MES" required>
+                <option value="">Seleccione el mes</option>
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+            </select>
+        </div>
+
+        <!-- SECTOR -->
+        <div class="campo">
+            <label for="CODIGO_SECTOR_N1">🏢 Sector económico</label>
+            <select id="CODIGO_SECTOR_N1" required>
+                <option value="">Seleccione el sector</option>
+                <option value="1">Sector 1</option>
+                <option value="2">Sector 2</option>
+                <option value="3">Sector 3</option>
+                <option value="4">Sector 4</option>
+                <option value="5">Sector 5</option>
+                <option value="6">Sector 6</option>
+                <option value="7">Sector 7</option>
+                <option value="8">Sector 8</option>
+                <option value="9">Sector 9</option>
+                <option value="10">Sector 10</option>
+                <option value="11">Sector 11</option>
+                <option value="12">Sector 12</option>
+                <option value="13">Sector 13</option>
+                <option value="14">Sector 14</option>
+                <option value="15">Sector 15</option>
+                <option value="16">Sector 16</option>
+                <option value="17">Sector 17</option>
+                <option value="18">Sector 18</option>
+                <option value="19">Sector 19</option>
+                <option value="20">Sector 20</option>
+                <option value="21">Sector 21</option>
+                <option value="22">Sector 22</option>
+                <option value="23">Sector 23</option>
+                <option value="24">Sector 24</option>
+                <option value="25">Sector 25</option>
+            </select>
+            <span class="ayuda">Código del sector económico registrado en el conjunto de datos.</span>
+        </div>
+
+        <!-- PROVINCIA -->
+        <div class="campo">
+            <label for="PROVINCIA">📍 Provincia</label>
+            <select id="PROVINCIA" required>
+                <option value="">Seleccione la provincia</option>
+                <option value="Azuay">Azuay</option>
+                <option value="Bolívar">Bolívar</option>
+                <option value="Cañar">Cañar</option>
+                <option value="Carchi">Carchi</option>
+                <option value="Chimborazo">Chimborazo</option>
+                <option value="Cotopaxi">Cotopaxi</option>
+                <option value="El Oro">El Oro</option>
+                <option value="Esmeraldas">Esmeraldas</option>
+                <option value="Galápagos">Galápagos</option>
+                <option value="Guayas">Guayas</option>
+                <option value="Imbabura">Imbabura</option>
+                <option value="Loja">Loja</option>
+                <option value="Los Ríos">Los Ríos</option>
+                <option value="Manabí">Manabí</option>
+                <option value="Morona Santiago">Morona Santiago</option>
+                <option value="Napo">Napo</option>
+                <option value="Orellana">Orellana</option>
+                <option value="Pastaza">Pastaza</option>
+                <option value="Pichincha">Pichincha</option>
+                <option value="Santa Elena">Santa Elena</option>
+                <option value="Santo Domingo de los Tsáchilas">Santo Domingo de los Tsáchilas</option>
+                <option value="Sucumbíos">Sucumbíos</option>
+                <option value="Tungurahua">Tungurahua</option>
+                <option value="Zamora Chinchipe">Zamora Chinchipe</option>
+            </select>
+        </div>
+
+        <!-- CANTÓN -->
+        <div class="campo">
+            <label for="CANTON">🏙️ Cantón</label>
+            <select id="CANTON" required disabled>
+                <option value="">Primero seleccione una provincia</option>
+            </select>
+        </div>
+
+        <!-- VENTAS -->
+        <div class="campo">
+            <label for="VENTAS_NETAS_TARIFA_GRAVADA">💰 Ventas netas tarifa gravada</label>
+            <input type="number" id="VENTAS_NETAS_TARIFA_GRAVADA" min="0" step="0.01" placeholder="Ej.: 25000.00" required>
+        </div>
+
+        <div class="campo">
+            <label for="VENTAS_NETAS_TARIFA_0">💰 Ventas netas tarifa 0</label>
+            <input type="number" id="VENTAS_NETAS_TARIFA_0" min="0" step="0.01" placeholder="Ej.: 15000.00" required>
+        </div>
+
+        <div class="campo">
+            <label for="VENTAS_NETAS_TARIFA_VARIABLE">💰 Ventas netas tarifa variable</label>
+            <input type="number" id="VENTAS_NETAS_TARIFA_VARIABLE" min="0" step="0.01" placeholder="Ej.: 0.00" required>
+        </div>
+
+        <div class="campo">
+            <label for="VENTAS_NETAS_TARIFA_5">💰 Ventas netas tarifa 5</label>
+            <input type="number" id="VENTAS_NETAS_TARIFA_5" min="0" step="0.01" placeholder="Ej.: 0.00" required>
+        </div>
+
+        <div class="campo">
+            <label for="EXPORTACIONES">🌎 Exportaciones</label>
+            <input type="number" id="EXPORTACIONES" min="0" step="0.01" placeholder="Ej.: 0.00" required>
+        </div>
+
+        <!-- COMPRAS -->
+        <div class="campo">
+            <label for="COMPRAS_NETAS_TARIFA_GRAVADA">🛒 Compras netas tarifa gravada</label>
+            <input type="number" id="COMPRAS_NETAS_TARIFA_GRAVADA" min="0" step="0.01" placeholder="Ej.: 10000.00" required>
+        </div>
+
+        <div class="campo">
+            <label for="COMPRAS_NETAS_TARIFA_0">🛒 Compras netas tarifa 0</label>
+            <input type="number" id="COMPRAS_NETAS_TARIFA_0" min="0" step="0.01" placeholder="Ej.: 5000.00" required>
+        </div>
+
+        <div class="campo">
+            <label for="IMPORTACIONES">🚢 Importaciones</label>
+            <input type="number" id="IMPORTACIONES" min="0" step="0.01" placeholder="Ej.: 0.00" required>
+        </div>
+
+        <div class="campo">
+            <label for="COMPRAS_RISE">🧾 Compras RISE</label>
+            <input type="number" id="COMPRAS_RISE" min="0" step="0.01" placeholder="Ej.: 0.00" required>
+        </div>
+
+        <div class="campo">
+            <label for="TOTAL_COMPRAS">🛍️ Total de compras</label>
+            <input type="number" id="TOTAL_COMPRAS" min="0" step="0.01" placeholder="Ej.: 15000.00" required>
+        </div>
+
+        <div class="campo">
+            <label for="TOTAL_VENTAS">📊 Total de ventas</label>
+            <input type="number" id="TOTAL_VENTAS" min="0" step="0.01" placeholder="Ej.: 29000.00" required>
+        </div>
+
+        <div class="campo">
+            <label for="VENTAS_MES_ANTERIOR">📈 Ventas del mes anterior</label>
+            <input type="number" id="VENTAS_MES_ANTERIOR" min="0" step="0.01" placeholder="Ej.: 22000.00" required>
+        </div>
+
+        <div class="campo campo-completo">
+            <span class="ayuda">
+                ℹ️ El sistema calcula automáticamente AÑO, MES_SIGUIENTE,
+                AÑO_SIGUIENTE y VARIACION_VENTAS antes de enviar los datos al modelo original.
+            </span>
+        </div>
+
+    </div>
+
+    <button type="submit" class="boton" id="botonPredecir">
+        🔮 PREDECIR VENTAS
+    </button>
+
+</form>
+
+
+        <!-- =================================================
+             RESULTADO EXITOSO
+             ================================================= -->
+
+        <div
+            id="resultadoExito"
+            class="resultado resultado-exito"
+        >
+
+        </div>
+
+
+        <!-- =================================================
+             RESULTADO ERROR
+             ================================================= -->
+
+        <div
+            id="resultadoError"
+            class="resultado resultado-error"
+        >
+
+        </div>
+
+
+    </div>
+
+
+    <div class="pie">
+
+        Minería de Datos · Análisis y predicción de ventas
+        <br>
+        Datos correspondientes al período de estudio 2026
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+
+// ==========================================================
+// LISTADO DE CANTONES POR PROVINCIA
+// ==========================================================
+
+const cantones = {
+
+    "Azuay": [
+        "Cuenca",
+        "Camilo Ponce Enríquez",
+        "Chordeleg",
+        "El Pan",
+        "Girón",
+        "Guachapala",
+        "Gualaceo",
+        "Nabón",
+        "Oña",
+        "Paute",
+        "Pucará",
+        "San Fernando",
+        "Santa Isabel",
+        "Sevilla de Oro",
+        "Sígsig"
+    ],
+
+
+    "Bolívar": [
+        "Guaranda",
+        "Caluma",
+        "Chillanes",
+        "Chimbo",
+        "Echeandía",
+        "Las Naves",
+        "San Miguel"
+    ],
+
+
+    "Cañar": [
+        "Azogues",
+        "Biblián",
+        "Cañar",
+        "Déleg",
+        "El Tambo",
+        "La Troncal",
+        "Suscal"
+    ],
+
+
+    "Carchi": [
+        "Tulcán",
+        "Bolívar",
+        "Espejo",
+        "Mira",
+        "Montúfar",
+        "San Pedro de Huaca"
+    ],
+
+
+    "Chimborazo": [
+        "Riobamba",
+        "Alausí",
+        "Chambo",
+        "Chunchi",
+        "Colta",
+        "Cumandá",
+        "Guamote",
+        "Guano",
+        "Pallatanga",
+        "Penipe"
+    ],
+
+
+    "Cotopaxi": [
+        "Latacunga",
+        "La Maná",
+        "Pangua",
+        "Pujilí",
+        "Salcedo",
+        "Saquisilí",
+        "Sigchos"
+    ],
+
+
+    "El Oro": [
+        "Machala",
+        "Arenillas",
+        "Atahualpa",
+        "Balsas",
+        "Chilla",
+        "El Guabo",
+        "Huaquillas",
+        "Las Lajas",
+        "Marcabelí",
+        "Pasaje",
+        "Piñas",
+        "Portovelo",
+        "Santa Rosa",
+        "Zaruma"
+    ],
+
+
+    "Esmeraldas": [
+        "Esmeraldas",
+        "Atacames",
+        "Eloy Alfaro",
+        "Muisne",
+        "Quinindé",
+        "Rioverde",
+        "San Lorenzo"
+    ],
+
+
+    "Galápagos": [
+        "San Cristóbal",
+        "Isabela",
+        "Santa Cruz"
+    ],
+
+
+    "Guayas": [
+        "Guayaquil",
+        "Alfredo Baquerizo Moreno",
+        "Balao",
+        "Balzar",
+        "Colimes",
+        "Daule",
+        "Durán",
+        "El Empalme",
+        "El Triunfo",
+        "General Antonio Elizalde",
+        "Isidro Ayora",
+        "Lomas de Sargentillo",
+        "Marcelino Maridueña",
+        "Milagro",
+        "Naranjal",
+        "Naranjito",
+        "Nobol",
+        "Palestina",
+        "Pedro Carbo",
+        "Playas",
+        "Salitre",
+        "Samborondón",
+        "Santa Lucía",
+        "Simón Bolívar",
+        "Yaguachi"
+    ],
+
+
+    "Imbabura": [
+        "Ibarra",
+        "Antonio Ante",
+        "Cotacachi",
+        "Otavalo",
+        "Pimampiro",
+        "San Miguel de Urcuquí"
+    ],
+
+
+    "Loja": [
+        "Loja",
+        "Calvas",
+        "Catamayo",
+        "Celica",
+        "Chaguarpamba",
+        "Espíndola",
+        "Gonzanamá",
+        "Macará",
+        "Olmedo",
+        "Paltas",
+        "Pindal",
+        "Puyango",
+        "Quilanga",
+        "Saraguro",
+        "Sozoranga",
+        "Zapotillo"
+    ],
+
+
+    "Los Ríos": [
+        "Babahoyo",
+        "Baba",
+        "Buena Fe",
+        "Mocache",
+        "Montalvo",
+        "Palenque",
+        "Puebloviejo",
+        "Quevedo",
+        "Quinsaloma",
+        "Urdaneta",
+        "Valencia",
+        "Ventanas",
+        "Vinces"
+    ],
+
+
+    "Manabí": [
+        "Portoviejo",
+        "24 de Mayo",
+        "Bolívar",
+        "Chone",
+        "El Carmen",
+        "Flavio Alfaro",
+        "Jama",
+        "Jaramijó",
+        "Jipijapa",
+        "Junín",
+        "Manta",
+        "Montecristi",
+        "Olmedo",
+        "Paján",
+        "Pedernales",
+        "Pichincha",
+        "Puerto López",
+        "Rocafuerte",
+        "San Vicente",
+        "Santa Ana",
+        "Sucre",
+        "Tosagua"
+    ],
+
+
+    "Morona Santiago": [
+        "Morona",
+        "Gualaquiza",
+        "Huamboya",
+        "Limón Indanza",
+        "Logroño",
+        "Pablo Sexto",
+        "Palora",
+        "San Juan Bosco",
+        "Santiago de Méndez",
+        "Sucúa",
+        "Taisha",
+        "Tiwintza"
+    ],
+
+
+    "Napo": [
+        "Tena",
+        "Archidona",
+        "Carlos Julio Arosemena Tola",
+        "El Chaco",
+        "Quijos"
+    ],
+
+
+    "Orellana": [
+        "Francisco de Orellana",
+        "Aguarico",
+        "La Joya de los Sachas",
+        "Loreto"
+    ],
+
+
+    "Pastaza": [
+        "Pastaza",
+        "Arajuno",
+        "Mera",
+        "Santa Clara"
+    ],
+
+
+    "Pichincha": [
+        "Quito",
+        "Cayambe",
+        "Mejía",
+        "Pedro Moncayo",
+        "Pedro Vicente Maldonado",
+        "Puerto Quito",
+        "Rumiñahui",
+        "San Miguel de los Bancos"
+    ],
+
+
+    "Santa Elena": [
+        "Santa Elena",
+        "La Libertad",
+        "Salinas"
+    ],
+
+
+    "Santo Domingo de los Tsáchilas": [
+        "Santo Domingo",
+        "La Concordia"
+    ],
+
+
+    "Sucumbíos": [
+        "Lago Agrio",
+        "Cascales",
+        "Cuyabeno",
+        "Gonzalo Pizarro",
+        "Putumayo",
+        "Shushufindi",
+        "Sucumbíos"
+    ],
+
+
+    "Tungurahua": [
+        "Ambato",
+        "Baños de Agua Santa",
+        "Cevallos",
+        "Mocha",
+        "Patate",
+        "Quero",
+        "San Pedro de Pelileo",
+        "Santiago de Píllaro",
+        "Tisaleo"
+    ],
+
+
+    "Zamora Chinchipe": [
+        "Zamora",
+        "Centinela del Cóndor",
+        "Chinchipe",
+        "El Pangui",
+        "Nangaritza",
+        "Palanda",
+        "Paquisha",
+        "Yacuambi",
+        "Yantzaza"
+    ]
+
+};
+
+
+// ==========================================================
+// ELEMENTOS HTML
+// ==========================================================
+
+const provinciaSelect =
+    document.getElementById("PROVINCIA");
+
+const cantonSelect =
+    document.getElementById("CANTON");
+
+
+// ==========================================================
+// CARGAR CANTONES SEGÚN PROVINCIA
+// ==========================================================
+
+provinciaSelect.addEventListener(
+    "change",
+    function () {
+
+        const provincia = this.value;
+
+
+        cantonSelect.innerHTML =
+            '<option value="">Seleccione el cantón</option>';
+
+
+        if (!provincia) {
+
+            cantonSelect.disabled = true;
+
+            cantonSelect.innerHTML =
+                '<option value="">Primero seleccione una provincia</option>';
+
+            return;
+        }
+
+
+        const listaCantones =
+            cantones[provincia] || [];
+
+
+        listaCantones.forEach(
+            function (nombre) {
+
+                const opcion =
+                    document.createElement("option");
+
+                opcion.value = nombre;
+
+                opcion.textContent = nombre;
+
+                cantonSelect.appendChild(opcion);
+
+            }
+        );
+
+
+        cantonSelect.disabled = false;
+
+    }
+);
+
+
+// ==========================================================
+// FORMULARIO
+// ==========================================================
+
+const formulario =
+    document.getElementById(
+        "formularioPrediccion"
+    );
+
+
+const boton =
+    document.getElementById(
+        "botonPredecir"
+    );
+
+
+const resultadoExito =
+    document.getElementById(
+        "resultadoExito"
+    );
+
+
+const resultadoError =
+    document.getElementById(
+        "resultadoError"
+    );
+
+
+// ==========================================================
+// ENVIAR PREDICCIÓN
+// ==========================================================
+
+formulario.addEventListener(
+    "submit",
+    async function (evento) {
+
+        evento.preventDefault();
+
+
+        // --------------------------------------------------
+        // OCULTAR RESULTADOS ANTERIORES
+        // --------------------------------------------------
+
+        resultadoExito.style.display =
+            "none";
+
+        resultadoError.style.display =
+            "none";
+
+
+        // --------------------------------------------------
+        // OBTENER DATOS DEL FORMULARIO
+// --------------------------------------------------
+
+const mes =
+    Number(document.getElementById("MES").value);
+
+const sector =
+    Number(document.getElementById("CODIGO_SECTOR_N1").value);
+
+const provincia =
+    document.getElementById("PROVINCIA").value;
+
+const canton =
+    document.getElementById("CANTON").value;
+
+
+// --------------------------------------------------
+// FUNCIÓN PARA OBTENER VALORES NUMÉRICOS
+// --------------------------------------------------
+
+function obtenerNumero(id) {
+
+    return Number(
+        document.getElementById(id).value
+    );
+}
+
+
+// --------------------------------------------------
+// VARIABLES ECONÓMICAS DEL MODELO ORIGINAL
+// --------------------------------------------------
+
+const ventasGravada =
+    obtenerNumero("VENTAS_NETAS_TARIFA_GRAVADA");
+
+const ventasTarifa0 =
+    obtenerNumero("VENTAS_NETAS_TARIFA_0");
+
+const ventasVariable =
+    obtenerNumero("VENTAS_NETAS_TARIFA_VARIABLE");
+
+const ventasTarifa5 =
+    obtenerNumero("VENTAS_NETAS_TARIFA_5");
+
+const exportaciones =
+    obtenerNumero("EXPORTACIONES");
+
+const comprasGravada =
+    obtenerNumero("COMPRAS_NETAS_TARIFA_GRAVADA");
+
+const comprasTarifa0 =
+    obtenerNumero("COMPRAS_NETAS_TARIFA_0");
+
+const importaciones =
+    obtenerNumero("IMPORTACIONES");
+
+const comprasRise =
+    obtenerNumero("COMPRAS_RISE");
+
+const totalCompras =
+    obtenerNumero("TOTAL_COMPRAS");
+
+const totalVentas =
+    obtenerNumero("TOTAL_VENTAS");
+
+const ventasAnterior =
+    obtenerNumero("VENTAS_MES_ANTERIOR");
+
+
+// --------------------------------------------------
+// VALIDACIONES
+// --------------------------------------------------
+
+if (!mes) {
+
+    mostrarError("Debe seleccionar el mes.");
+    return;
+}
+
+if (!sector) {
+
+    mostrarError("Debe seleccionar el sector económico.");
+    return;
+}
+
+if (!provincia) {
+
+    mostrarError("Debe seleccionar la provincia.");
+    return;
+}
+
+if (!canton) {
+
+    mostrarError("Debe seleccionar el cantón.");
+    return;
+}
+
+
+const valoresNumericos = {
+
+    "Ventas tarifa gravada":
+        ventasGravada,
+
+    "Ventas tarifa 0":
+        ventasTarifa0,
+
+    "Ventas tarifa variable":
+        ventasVariable,
+
+    "Ventas tarifa 5":
+        ventasTarifa5,
+
+    "Exportaciones":
+        exportaciones,
+
+    "Compras tarifa gravada":
+        comprasGravada,
+
+    "Compras tarifa 0":
+        comprasTarifa0,
+
+    "Importaciones":
+        importaciones,
+
+    "Compras RISE":
+        comprasRise,
+
+    "Total compras":
+        totalCompras,
+
+    "Total ventas":
+        totalVentas,
+
+    "Ventas mes anterior":
+        ventasAnterior
+};
+
+
+for (const [nombre, valor] of Object.entries(valoresNumericos)) {
+
+    if (!Number.isFinite(valor) || valor < 0) {
+
+        mostrarError(
+            `Ingrese un valor válido para: ${nombre}.`
+        );
+
+        return;
+    }
+}
+
+
+// --------------------------------------------------
+// DATOS QUE SE ENVÍAN A FASTAPI
+// --------------------------------------------------
+
+const datos = {
+
+    MES: mes,
+
+    CODIGO_SECTOR_N1:
+        sector,
+
+    PROVINCIA:
+        provincia,
+
+    CANTON:
+        canton,
+
+    VENTAS_NETAS_TARIFA_GRAVADA:
+        ventasGravada,
+
+    VENTAS_NETAS_TARIFA_0:
+        ventasTarifa0,
+
+    VENTAS_NETAS_TARIFA_VARIABLE:
+        ventasVariable,
+
+    VENTAS_NETAS_TARIFA_5:
+        ventasTarifa5,
+
+    EXPORTACIONES:
+        exportaciones,
+
+    COMPRAS_NETAS_TARIFA_GRAVADA:
+        comprasGravada,
+
+    COMPRAS_NETAS_TARIFA_0:
+        comprasTarifa0,
+
+    IMPORTACIONES:
+        importaciones,
+
+    COMPRAS_RISE:
+        comprasRise,
+
+    TOTAL_COMPRAS:
+        totalCompras,
+
+    TOTAL_VENTAS:
+        totalVentas,
+
+    VENTAS_MES_ANTERIOR:
+        ventasAnterior
+};
+
+
+console.log(
+    "DATOS ENVIADOS AL MODELO ORIGINAL:"
+);
+
+console.table(datos);
+
+
+// --------------------------------------------------
+// ESTADO DE CARGA
+// --------------------------------------------------
+
+
+        // --------------------------------------------------
+
+        boton.disabled = true;
+
+        boton.innerHTML = `
+            <span class="cargando"></span>
+            CALCULANDO PREDICCIÓN...
+        `;
+
+
+        try {
+
+
+            // ==============================================
+            // PETICIÓN A FASTAPI
+            // ==============================================
+
+            const response =
+                await fetch(
+                    "/predecir",
+                    {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(datos)
+
+                    }
+                );
+
+
+            // ==============================================
+            // LEER RESPUESTA
+            // ==============================================
+
+            const resultado =
+                await response.json();
+
+
+            console.log(
+                "RESPUESTA DE LA API:"
+            );
+
+            console.log(resultado);
+
+
+            // ==============================================
+            // ERROR HTTP
+            // ==============================================
+
+            if (!response.ok) {
+
+
+                let mensaje =
+                    "No fue posible realizar la predicción.";
+
+
+                // Error de validación FastAPI
+                if (
+                    Array.isArray(
+                        resultado.detail
+                    )
+                ) {
+
+                    mensaje =
+                        resultado.detail
+                            .map(
+                                function (error) {
+
+                                    let campo =
+                                        "Campo";
+
+                                    if (
+                                        error.loc
+                                    ) {
+
+                                        campo =
+                                            error.loc
+                                                .join(
+                                                    " → "
+                                                );
+                                    }
+
+
+                                    return (
+                                        campo +
+                                        ": " +
+                                        (
+                                            error.msg ||
+                                            "Valor inválido"
+                                        )
+                                    );
+
+                                }
+                            )
+                            .join("<br>");
+
+                }
+
+                else if (
+                    typeof resultado.detail ===
+                    "string"
+                ) {
+
+                    mensaje =
+                        resultado.detail;
+
+                }
+
+                else if (
+                    resultado.detail
+                ) {
+
+                    mensaje =
+                        JSON.stringify(
+                            resultado.detail,
+                            null,
+                            2
+                        );
+                }
+
+
+                throw new Error(
+                    mensaje
+                );
+
+            }
+
+
+            // ==============================================
+            // VERIFICAR PREDICCIÓN
+            // ==============================================
+
+            if (
+                !resultado.success
+            ) {
+
+                throw new Error(
+                    "La API no confirmó la predicción."
+                );
+
+            }
+
+
+            if (
+                resultado.ventas_predichas ===
+                undefined
+            ) {
+
+                throw new Error(
+                    "La API no devolvió el valor de ventas predichas."
+                );
+
+            }
+
+
+            // ==============================================
+            // FORMATEAR PREDICCIÓN
+            // ==============================================
+
+            const ventasPredichas =
+                Number(
+                    resultado.ventas_predichas
+                );
+
+
+            const valorFormateado =
+                ventasPredichas.toLocaleString(
+                    "en-US",
+                    {
+
+                        minimumFractionDigits: 2,
+
+                        maximumFractionDigits: 2
+
+                    }
+                );
+
+
+            // ==============================================
+            // MOSTRAR RESULTADO
+            // ==============================================
+
+            resultadoExito.innerHTML = `
+
+                <h2>
+                    ✅ Predicción realizada correctamente
+                </h2>
+
+                <p>
+                    Ventas estimadas para el
+                    siguiente período:
+                </p>
+
+                <div class="valor-prediccion">
+
+                    $${valorFormateado}
+
+                </div>
+
+
+                <div class="detalle">
+
+
+                    <div class="detalle-item">
+
+                        <strong>
+                            📍 UBICACIÓN
+                        </strong>
+
+                        ${provincia}
+                        -
+                        ${canton}
+
+                    </div>
+
+
+                    <div class="detalle-item">
+
+                        <strong>
+                            📅 PERÍODO ACTUAL
+                        </strong>
+
+                        Mes ${mes} / 2026
+
+                    </div>
+
+
+                    <div class="detalle-item">
+
+                        <strong>
+                            📅 SIGUIENTE PERÍODO
+                        </strong>
+
+                        Mes
+                        ${resultado.mes_siguiente}
+                        /
+                        ${resultado.año_siguiente}
+
+                    </div>
+
+
+                    <div class="detalle-item">
+
+                        <strong>
+                            📈 VARIACIÓN ACTUAL
+                        </strong>
+
+                        $${Number(
+                            resultado.variacion_ventas
+                        ).toLocaleString(
+                            "en-US",
+                            {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            }
+                        )}
+
+                    </div>
+
+
+                </div>
+
+            `;
+
+
+            resultadoExito.style.display =
+                "block";
+
+
+            // Llevar al resultado
+            resultadoExito.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+
+        }
+
+        catch (error) {
+
+
+            console.error(
+                "ERROR EN LA PREDICCIÓN:",
+                error
+            );
+
+
+            resultadoError.innerHTML = `
+
+                <strong>
+                    ❌ Error en la predicción
+                </strong>
+
+                <br><br>
+
+                ${error.message}
+
+            `;
+
+
+            resultadoError.style.display =
+                "block";
+
+
+            resultadoError.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+        }
+
+
+        finally {
+
+
+            // ------------------------------------------------
+            // RESTAURAR BOTÓN
+            // ------------------------------------------------
+
+            boton.disabled = false;
+
+            boton.innerHTML =
+                "🔮 PREDECIR VENTAS";
+
+        }
+
+    }
+);
+
+
+// ==========================================================
+// FUNCIÓN PARA MOSTRAR ERRORES
+// ==========================================================
+
+function mostrarError(mensaje) {
+
+    resultadoExito.style.display =
+        "none";
+
+
+    resultadoError.innerHTML = `
+
+        <strong>
+            ⚠️ Verifique los datos
+        </strong>
+
+        <br><br>
+
+        ${mensaje}
+
+    `;
+
+
+    resultadoError.style.display =
+        "block";
+
+
+    resultadoError.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+    });
+
+}
+
+</script>
+
+
+</body>
+
+</html>
